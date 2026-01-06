@@ -1,7 +1,7 @@
 import React from 'react';
 import { STATE_COLORS } from '../../utils/constants';
 
-const StateCell = ({ state, day, size = 'medium', className = '' }) => {
+const StateCell = React.memo(({ state, day, size = 'medium', className = '' }) => {
   const getDisplayState = (state) => {
     if (state === '-') return '';
     if (state.startsWith('I')) return 'I';
@@ -40,6 +40,8 @@ const StateCell = ({ state, day, size = 'medium', className = '' }) => {
       {getDisplayState(state)}
     </div>
   );
-};
+});
+
+StateCell.displayName = 'StateCell';
 
 export default StateCell;

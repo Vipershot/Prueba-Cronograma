@@ -1,5 +1,13 @@
 import { validateSchedulePatterns } from './validators';
 
+/**
+ * Generates a complete schedule for 3 supervisors following mining operation rules
+ * @param {number} workDays - Number of work days in the cycle (N)
+ * @param {number} restDays - Total rest days in the cycle (M)
+ * @param {number} inductionDays - Number of induction days
+ * @param {number} totalDrillingDays - Total drilling days required
+ * @returns {Object} Schedule object with supervisor arrays and validation results
+ */
 export const generateSchedule = (workDays, restDays, inductionDays, totalDrillingDays) => {
   const realRestDays = restDays - 2;
   const maxDays = Math.max(totalDrillingDays * 2, 200);
@@ -34,6 +42,17 @@ export const generateSchedule = (workDays, restDays, inductionDays, totalDrillin
   return { schedule, errors, warnings, s3EntryDay };
 };
 
+/**
+ * Generates schedule for a single supervisor following the cycle pattern
+ * @param {Object} schedule - The schedule object
+ * @param {string} supervisor - Supervisor key ('s1', 's2', 's3')
+ * @param {number} startDay - Day to start the schedule
+ * @param {number} workDays - Work days per cycle
+ * @param {number} inductionDays - Induction days
+ * @param {number} totalDrillingDays - Total drilling days needed
+ * @param {number} realRestDays - Actual rest days (M - 2)
+ * @param {number} maxDays - Maximum days to generate
+ */
 const generateSupervisorSchedule = (schedule, supervisor, startDay, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays) => {
   const sched = schedule[supervisor];
   let day = startDay;

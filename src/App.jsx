@@ -1,131 +1,46 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { validateInputs } from './utils/validators';
 import { generateSchedule } from './utils/scheduleGenerator';
 import { TEST_CASES } from './utils/constants';
-
+import { useConfig } from './hooks/useConfig';
 
 import AlertPanel from './components/organisms/AlertPanel';
 import ScheduleTemplate from './components/templates/ScheduleTemplate';
 import MainLayout from './components/templates/MainLayout';
 import ConfigPanel from './components/organisms/ConfigPanel';
 
+/**
+ * Main application component for mining shift planning system
+ * @returns {JSX.Element} The main app component
+ */
 function App() {
-  const [config, setConfig] = useState({
+  const { config, fieldErrors, isFormValid, updateField, loadTestCase } = useConfig({
     workDays: 14,
     restDays: 7,
     inductionDays: 5,
     totalDrillingDays: 30
   });
-  
+
   const [schedule, setSchedule] = useState(null);
   const [errors, setErrors] = useState([]);
   const [warnings, setWarnings] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [isFormValid, setIsFormValid] = useState(true);
-
-  useEffect(() => {
-    validateForm();
-  }, [config]);
-
-  const validateForm = () => {
-    const newFieldErrors = {};
-    let formIsValid = true;
-
-    if (config.workDays === '' || config.workDays === undefined) {
-      newFieldErrors.workDays = 'Este campo es requerido';
-      formIsValid = false;
-    } else if (config.workDays < 5 || config.workDays > 30) {
-      newFieldErrors.workDays = 'Debe estar entre 5 y 30';
-      formIsValid = false;
-    }
-
-    if (config.restDays === '' || config.restDays === undefined) {
-      newFieldErrors.restDays = 'Este campo es requerido';
-      formIsValid = false;
-    } else if (config.restDays < 4 || config.restDays > 14) {
-      newFieldErrors.restDays = 'Debe estar entre 4 y 14';
-      formIsValid = false;
-    }
-
-    if (config.inductionDays === '' || config.inductionDays === undefined) {
-      newFieldErrors.inductionDays = 'Este campo es requerido';
-      formIsValid = false;
-    } else if (config.inductionDays < 1 || config.inductionDays > 5) {
-      newFieldErrors.inductionDays = 'Debe estar entre 1 y 5';
-      formIsValid = false;
-    }
-
-    if (config.totalDrillingDays === '' || config.totalDrillingDays === undefined) {
-      newFieldErrors.totalDrillingDays = 'Este campo es requerido';
-      formIsValid = false;
-    } else if (config.totalDrillingDays < 30 || config.totalDrillingDays > 180) {
-      newFieldErrors.totalDrillingDays = 'Debe estar entre 30 y 180';
-      formIsValid = false;
-    }
-
-
-    if (config.workDays && config.inductionDays && config.workDays <= config.inductionDays) {
-      newFieldErrors.workDays = 'Debe ser mayor que días de inducción';
-      formIsValid = false;
-    }
-
-    setFieldErrors(newFieldErrors);
-    setIsFormValid(formIsValid);
-    return formIsValid;
-  };
-
-  const handleConfigChange = useCallback((field, value, isValid = true) => {
-    if (value === '') {
-      setConfig(prev => ({ ...prev, [field]: '' }));
-      
-      setFieldErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-      return;
-    }
-    
-    const numValue = typeof value === 'number' ? value : parseInt(value, 10);
-    
-
-    if (!isNaN(numValue) && isValid) {
-      setConfig(prev => ({ ...prev, [field]: numValue }));
-      
-      setFieldErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    } else if (typeof value === 'string' && value !== '') {
-      setConfig(prev => ({ ...prev, [field]: value }));
-    }
-  }, []);
 
   const handleGenerateSchedule = useCallback(() => {
-    if (!validateForm()) {
+    if (!isFormValid) {
       setErrors(['Por favor, corrija los errores en el formulario']);
       setWarnings([]);
       setSchedule(null);
       return;
     }
-    
-    const hasEmptyValues = Object.values(config).some(value => value === '' || value === undefined);
-    const hasInvalidValues = Object.values(config).some(value => isNaN(value));
-    
-    if (hasEmptyValues || hasInvalidValues) {
-      setErrors(['Todos los campos deben tener valores válidos']);
-      setWarnings([]);
-      setSchedule(null);
-      return;
-    }
-    
+
     setIsGenerating(true);
-    
+
     setTimeout(() => {
       const { workDays, restDays, inductionDays, totalDrillingDays } = config;
-      
+
       const validation = validateInputs(workDays, restDays, inductionDays, totalDrillingDays);
-      
+
       if (validation.errors.length > 0) {
         setErrors(validation.errors);
         setWarnings(validation.warnings);
@@ -133,28 +48,22 @@ function App() {
         setIsGenerating(false);
         return;
       }
-      
+
       const result = generateSchedule(workDays, restDays, inductionDays, totalDrillingDays);
-      
+
       setSchedule(result.schedule);
       setErrors(result.errors);
       setWarnings(result.warnings);
       setIsGenerating(false);
     }, 500);
-  }, [config]);
+  }, [config, isFormValid]);
 
   const handleTestCaseSelect = useCallback((testCase) => {
-    setConfig({
-      workDays: testCase.workDays,
-      restDays: testCase.restDays,
-      inductionDays: testCase.inductionDays,
-      totalDrillingDays: testCase.totalDrillingDays
-    });
-    
-    setFieldErrors({});
+    loadTestCase(testCase);
     setErrors([]);
     setWarnings([]);
-  }, []);
+    setSchedule(null);
+  }, [loadTestCase]);
 
   const allErrors = [...errors];
   if (!isFormValid && errors.length === 0) {
@@ -180,7 +89,7 @@ function App() {
         configPanel={
           <ConfigPanel
             config={config}
-            onConfigChange={handleConfigChange}
+            onConfigChange={updateField}
             onGenerate={handleGenerateSchedule}
             onTestCaseSelect={handleTestCaseSelect}
             isGenerating={isGenerating}
