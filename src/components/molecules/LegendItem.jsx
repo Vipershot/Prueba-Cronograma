@@ -1,6 +1,6 @@
 import React from 'react';
 import { STATE_LABELS } from '../../utils/constants';
-import ColorBox from '../atoms/Colorbox';
+import ColorBox from '../atoms/ColorBox';
 
 const LegendItem = ({ state, color }) => {
   return (
