@@ -1,4 +1,3 @@
-// components/organisms/ScheduleGrid.js
 import React from 'react';
 import StateCell from '../atoms/StateCell';
 

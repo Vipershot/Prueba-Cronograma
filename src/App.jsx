@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useCallback, useEffect } from 'react';
 import { validateInputs } from './utils/validators';
 import { generateSchedule } from './utils/scheduleGenerator';
@@ -25,7 +24,6 @@ function App() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(true);
 
-  // Validar formulario cuando cambian los valores
   useEffect(() => {
     validateForm();
   }, [config]);
@@ -34,7 +32,6 @@ function App() {
     const newFieldErrors = {};
     let formIsValid = true;
 
-    // Validar cada campo individualmente
     if (config.workDays === '' || config.workDays === undefined) {
       newFieldErrors.workDays = 'Este campo es requerido';
       formIsValid = false;
@@ -67,7 +64,7 @@ function App() {
       formIsValid = false;
     }
 
-    // Validación especial: workDays debe ser mayor que inductionDays
+
     if (config.workDays && config.inductionDays && config.workDays <= config.inductionDays) {
       newFieldErrors.workDays = 'Debe ser mayor que días de inducción';
       formIsValid = false;
@@ -79,11 +76,9 @@ function App() {
   };
 
   const handleConfigChange = useCallback((field, value, isValid = true) => {
-    // Si el valor está vacío, establecer como cadena vacía
     if (value === '') {
       setConfig(prev => ({ ...prev, [field]: '' }));
       
-      // Limpiar error de este campo
       setFieldErrors(prev => ({
         ...prev,
         [field]: ''
@@ -91,26 +86,22 @@ function App() {
       return;
     }
     
-    // Convertir a número si es posible
     const numValue = typeof value === 'number' ? value : parseInt(value, 10);
     
-    // Solo actualizar si es un número válido o si isValid es true
+
     if (!isNaN(numValue) && isValid) {
       setConfig(prev => ({ ...prev, [field]: numValue }));
       
-      // Limpiar error de este campo
       setFieldErrors(prev => ({
         ...prev,
         [field]: ''
       }));
     } else if (typeof value === 'string' && value !== '') {
-      // Mantener el string para permitir que el usuario siga escribiendo
       setConfig(prev => ({ ...prev, [field]: value }));
     }
   }, []);
 
   const handleGenerateSchedule = useCallback(() => {
-    // Validar formulario antes de generar
     if (!validateForm()) {
       setErrors(['Por favor, corrija los errores en el formulario']);
       setWarnings([]);
@@ -118,7 +109,6 @@ function App() {
       return;
     }
     
-    // Validar que todos los campos tengan valores válidos
     const hasEmptyValues = Object.values(config).some(value => value === '' || value === undefined);
     const hasInvalidValues = Object.values(config).some(value => isNaN(value));
     
@@ -134,7 +124,6 @@ function App() {
     setTimeout(() => {
       const { workDays, restDays, inductionDays, totalDrillingDays } = config;
       
-      // Validar inputs con el validador
       const validation = validateInputs(workDays, restDays, inductionDays, totalDrillingDays);
       
       if (validation.errors.length > 0) {
@@ -145,7 +134,6 @@ function App() {
         return;
       }
       
-      // Generar cronograma
       const result = generateSchedule(workDays, restDays, inductionDays, totalDrillingDays);
       
       setSchedule(result.schedule);
@@ -163,7 +151,6 @@ function App() {
       totalDrillingDays: testCase.totalDrillingDays
     });
     
-    // Limpiar errores al seleccionar un caso de prueba
     setFieldErrors({});
     setErrors([]);
     setWarnings([]);

@@ -1,4 +1,3 @@
-// components/molecules/AlertMessage.js
 import React from 'react';
 
 const AlertMessage = ({ type = 'error', message, className = '' }) => {

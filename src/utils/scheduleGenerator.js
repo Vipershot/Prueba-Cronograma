@@ -1,10 +1,9 @@
-// utils/scheduleGenerator.js
 import { validateSchedulePatterns } from './validators';
 
 export const generateSchedule = (workDays, restDays, inductionDays, totalDrillingDays) => {
   const realRestDays = restDays - 2;
-  const maxDays = Math.max(totalDrillingDays * 2, 100);
-  
+  const maxDays = Math.max(totalDrillingDays * 2, 200);
+
   const schedule = {
     s1: new Array(maxDays).fill('-'),
     s2: new Array(maxDays).fill('-'),
@@ -12,84 +11,76 @@ export const generateSchedule = (workDays, restDays, inductionDays, totalDrillin
     drillingCount: new Array(maxDays).fill(0)
   };
 
-  // Programar S1
-  const s1Schedule = scheduleSupervisor1(workDays, inductionDays, totalDrillingDays, realRestDays, maxDays);
-  Object.assign(schedule.s1, s1Schedule.schedule);
-  Object.assign(schedule.drillingCount, s1Schedule.drillingCount);
+  
+  generateSupervisorSchedule(schedule, 's1', 0, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays);
 
-  // Calcular entrada de S3
+  
   const s3EntryDay = calculateS3EntryDay(schedule.s1, inductionDays);
+  const s3StartDrillingDay = s3EntryDay + 1 + inductionDays;
+
   
-  // Programar S3
-  const s3Schedule = scheduleSupervisor3(
-    s3EntryDay, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays
-  );
-  Object.assign(schedule.s3, s3Schedule.schedule);
-  schedule.drillingCount = addDrillingCounts(schedule.drillingCount, s3Schedule.drillingCount);
+  if (s3EntryDay >= 0) {
+    generateSupervisorSchedule(schedule, 's3', s3EntryDay, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays);
+  }
 
-  // Programar S2
-  const s2Schedule = scheduleSupervisor2(
-    schedule, workDays, restDays, inductionDays, totalDrillingDays, realRestDays, maxDays, s3EntryDay
-  );
-  Object.assign(schedule.s2, s2Schedule.schedule);
-  schedule.drillingCount = addDrillingCounts(schedule.drillingCount, s2Schedule.drillingCount);
+  
+  generateS2Schedule(schedule, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays, s3StartDrillingDay);
 
-  // Validaciones finales
+  
+  updateDrillingCounts(schedule, maxDays);
+
   const { errors, warnings } = validateSchedulePatterns(schedule, s3EntryDay);
-  
+
   return { schedule, errors, warnings, s3EntryDay };
 };
 
-const scheduleSupervisor1 = (workDays, inductionDays, totalDrillingDays, realRestDays, maxDays) => {
-  const schedule = new Array(maxDays).fill('-');
-  const drillingCount = new Array(maxDays).fill(0);
-  let day = 0;
+const generateSupervisorSchedule = (schedule, supervisor, startDay, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays) => {
+  const sched = schedule[supervisor];
+  let day = startDay;
   let drillingDaysCompleted = 0;
   const drillingDaysPerCycle = workDays - inductionDays;
 
   while (drillingDaysCompleted < totalDrillingDays && day < maxDays) {
-    // Subida
-    schedule[day] = 'S';
-    day++;
-
-    // Inducción
-    for (let i = 0; i < inductionDays && day < maxDays; i++) {
-      schedule[day] = `I${i+1}`;
+    
+    if (day < maxDays) {
+      sched[day] = 'S';
       day++;
     }
 
-    // Perforación
+    
+    for (let i = 0; i < inductionDays && day < maxDays; i++) {
+      sched[day] = `I${i + 1}`;
+      day++;
+    }
+
+    
     const drillingNeeded = Math.min(drillingDaysPerCycle, totalDrillingDays - drillingDaysCompleted);
     for (let i = 0; i < drillingNeeded && day < maxDays; i++) {
-      schedule[day] = 'P';
-      drillingCount[day]++;
+      sched[day] = 'P';
       drillingDaysCompleted++;
       day++;
     }
 
-    // Completar ciclo de trabajo
-    const workDaysCompleted = inductionDays + drillingNeeded + 1;
-    for (let i = workDaysCompleted; i < workDays && day < maxDays; i++) {
-      schedule[day] = 'P';
-      drillingCount[day]++;
+    
+    const currentCycleLength = inductionDays + drillingNeeded + 1; // +1 for S
+    for (let i = currentCycleLength; i < workDays && drillingDaysCompleted < totalDrillingDays && day < maxDays; i++) {
+      sched[day] = 'P';
       drillingDaysCompleted++;
       day++;
     }
 
-    // Bajada
+    
     if (day < maxDays) {
-      schedule[day] = 'B';
+      sched[day] = 'B';
       day++;
     }
 
-    // Descanso
+    
     for (let i = 0; i < realRestDays && day < maxDays; i++) {
-      schedule[day] = 'D';
+      sched[day] = 'D';
       day++;
     }
   }
-
-  return { schedule, drillingCount };
 };
 
 const calculateS3EntryDay = (s1Schedule, inductionDays) => {
@@ -98,179 +89,103 @@ const calculateS3EntryDay = (s1Schedule, inductionDays) => {
       return Math.max(0, day - inductionDays - 1);
     }
   }
-  return 0;
+  return -1;
 };
 
-const scheduleSupervisor3 = (entryDay, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays) => {
-  const schedule = new Array(maxDays).fill('-');
-  const drillingCount = new Array(maxDays).fill(0);
-  
-  if (entryDay < 0 || entryDay >= maxDays) {
-    return { schedule, drillingCount };
-  }
-
-  let day = entryDay;
-  let drillingDaysCompleted = 0;
-  const totalCycleDays = workDays + realRestDays + 2;
-
-  // Subida
-  schedule[day] = 'S';
-  day++;
-
-  // Inducción
-  for (let i = 0; i < inductionDays && day < maxDays; i++) {
-    schedule[day] = `I${i+1}`;
-    day++;
-  }
-
-  // Perforación
-  while (drillingDaysCompleted < totalDrillingDays && day < maxDays) {
-    schedule[day] = 'P';
-    drillingCount[day]++;
-    drillingDaysCompleted++;
-    day++;
-
-    // Ciclos regulares
-    if ((day - entryDay) % totalCycleDays === workDays) {
-      if (day < maxDays) {
-        schedule[day] = 'B';
-        day++;
-      }
-
-      for (let i = 0; i < realRestDays && day < maxDays; i++) {
-        schedule[day] = 'D';
-        day++;
-      }
-
-      if (day < maxDays) {
-        schedule[day] = 'S';
-        day++;
-      }
-
-      for (let i = 0; i < inductionDays && day < maxDays; i++) {
-        schedule[day] = `I${i+1}`;
-        day++;
-      }
-    }
-  }
-
-  return { schedule, drillingCount };
-};
-
-const scheduleSupervisor2 = (schedule, workDays, restDays, inductionDays, totalDrillingDays, realRestDays, maxDays, s3EntryDay) => {
-  const s2Schedule = new Array(maxDays).fill('-');
-  const drillingCount = new Array(maxDays).fill(0);
-  const totalCycleDays = workDays + restDays;
-
+const generateS2Schedule = (schedule, workDays, inductionDays, totalDrillingDays, realRestDays, maxDays, s3StartDrillingDay) => {
+  const sched = schedule.s2;
   let day = 0;
   let drillingDaysCompleted = 0;
+  const drillingDaysPerCycle = workDays - inductionDays;
 
   while (drillingDaysCompleted < totalDrillingDays && day < maxDays) {
-    // Subida inicial
-    if (day === 0) {
-      s2Schedule[day] = 'S';
+    
+    if (day < maxDays) {
+      sched[day] = 'S';
       day++;
     }
 
-    // Inducción inicial
+    
     for (let i = 0; i < inductionDays && day < maxDays; i++) {
-      s2Schedule[day] = `I${i+1}`;
+      sched[day] = `I${i + 1}`;
       day++;
     }
 
-    // Perforación ajustada
-    while (drillingDaysCompleted < totalDrillingDays && day < maxDays) {
-      const currentDay = day;
-      const drillingToday = countDrillingToday(schedule, currentDay);
-
-      // Ajustar S2 según necesidad
-      if (drillingToday >= 2) {
-        s2Schedule[currentDay] = 'D';
-      } else {
-        s2Schedule[currentDay] = 'P';
-        drillingCount[currentDay]++;
-        drillingDaysCompleted++;
+    
+    let cycleDrilling = 0;
+    while (cycleDrilling < drillingDaysPerCycle && drillingDaysCompleted < totalDrillingDays && day < maxDays) {
+      const currentDrillingCount = countDrillingAtDay(schedule, day, 's2');
+      if (currentDrillingCount >= 2) {
         
-        // Verificar necesidad de ajustes especiales
-        if (shouldAdjustS2(schedule, currentDay, s3EntryDay)) {
-          adjustS2Schedule(s2Schedule, currentDay, realRestDays, inductionDays, maxDays);
-          day += adjustS2Schedule.length || 0;
-        }
+        sched[day] = 'D';
+      } else {
+        sched[day] = 'P';
+        drillingDaysCompleted++;
+        cycleDrilling++;
       }
-
       day++;
 
-      // Descanso regular
-      if ((day - 1) % totalCycleDays === workDays - 1) {
-        scheduleRegularRest(s2Schedule, day - 1, realRestDays, inductionDays, maxDays);
+      
+      if (day === s3StartDrillingDay && sched[day - 1] === 'P') {
+        
+        sched[day - 1] = 'B';
+        drillingDaysCompleted--; // Since we changed P to B
+        cycleDrilling--;
+        
+        for (let i = 0; i < realRestDays && day < maxDays; i++) {
+          sched[day] = 'D';
+          day++;
+        }
+        
+        if (day < maxDays) {
+          sched[day] = 'S';
+          day++;
+        }
+        for (let i = 0; i < inductionDays && day < maxDays; i++) {
+          sched[day] = `I${i + 1}`;
+          day++;
+        }
+        break; // Restart cycle
       }
+    }
+
+    
+    while (drillingDaysCompleted < totalDrillingDays && day < maxDays && cycleDrilling < drillingDaysPerCycle) {
+      const currentDrillingCount = countDrillingAtDay(schedule, day, 's2');
+      if (currentDrillingCount >= 2) {
+        sched[day] = 'D';
+      } else {
+        sched[day] = 'P';
+        drillingDaysCompleted++;
+        cycleDrilling++;
+      }
+      day++;
+    }
+
+    
+    if (day < maxDays && sched[day - 1] !== 'B') {
+      sched[day] = 'B';
+      day++;
+    }
+
+    
+    for (let i = 0; i < realRestDays && day < maxDays; i++) {
+      sched[day] = 'D';
+      day++;
     }
   }
-
-  return { schedule: s2Schedule, drillingCount };
 };
 
-const countDrillingToday = (schedule, day) => {
+const countDrillingAtDay = (schedule, day, excludeSupervisor = null) => {
   let count = 0;
-  if (schedule.s1[day] === 'P') count++;
-  if (schedule.s3[day] === 'P') count++;
+  ['s1', 's2', 's3'].forEach(sup => {
+    if (sup !== excludeSupervisor && schedule[sup][day] === 'P') count++;
+  });
   return count;
 };
 
-const shouldAdjustS2 = (schedule, day, s3EntryDay) => {
-  return schedule.s3[day] === 'P' && schedule.s1[day + 1] !== 'P' && day >= s3EntryDay;
-};
-
-const adjustS2Schedule = (s2Schedule, startDay, realRestDays, inductionDays, maxDays) => {
-  let day = startDay + 1;
-  
-  if (day < maxDays) {
-    s2Schedule[day] = 'B';
-    day++;
+const updateDrillingCounts = (schedule, maxDays) => {
+  for (let day = 0; day < maxDays; day++) {
+    schedule.drillingCount[day] = countDrillingAtDay(schedule, day);
   }
-
-  for (let i = 0; i < Math.max(1, realRestDays) && day < maxDays; i++) {
-    s2Schedule[day] = 'D';
-    day++;
-  }
-
-  if (day < maxDays) {
-    s2Schedule[day] = 'S';
-    day++;
-  }
-
-  for (let i = 0; i < inductionDays && day < maxDays; i++) {
-    s2Schedule[day] = `I${i+1}`;
-    day++;
-  }
-
-  return day - startDay - 1;
-};
-
-const scheduleRegularRest = (s2Schedule, currentDay, realRestDays, inductionDays, maxDays) => {
-  let day = currentDay + 1;
-  
-  if (day < maxDays) {
-    s2Schedule[day] = 'B';
-    day++;
-  }
-
-  for (let i = 0; i < realRestDays && day < maxDays; i++) {
-    s2Schedule[day] = 'D';
-    day++;
-  }
-
-  if (day < maxDays) {
-    s2Schedule[day] = 'S';
-    day++;
-  }
-
-  for (let i = 0; i < inductionDays && day < maxDays; i++) {
-    s2Schedule[day] = `I${i+1}`;
-    day++;
-  }
-};
-
-const addDrillingCounts = (baseCounts, additionalCounts) => {
-  return baseCounts.map((count, index) => count + additionalCounts[index]);
 };

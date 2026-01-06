@@ -1,11 +1,10 @@
-// components/molecules/LegendItem.js
 import React from 'react';
 import { STATE_LABELS } from '../../utils/constants';
 import ColorBox from '../atoms/Colorbox';
 
 const LegendItem = ({ state, color }) => {
   return (
-    <div className="flex items-center space-x-3 bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+    <div className="flex items-center space-x-3 bg-gradient-to-br from-white to-gray-50 px-4 py-3 rounded-lg shadow-md border border-gray-200 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer">
       <ColorBox color={color} size="medium" />
       <div>
         <div className="font-semibold text-gray-800">{STATE_LABELS[state]}</div>

@@ -1,4 +1,3 @@
-// components/organisms/AlertPanel.js
 import React from 'react';
 import AlertMessage from '../molecules/AlertMessage';
 

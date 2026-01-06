@@ -1,11 +1,10 @@
-// utils/validators.js
+
 import { VALIDATION_RULES } from './constants';
 
 export const validateInputs = (workDays, restDays, inductionDays, totalDrillingDays) => {
   const errors = [];
   const warnings = [];
 
-  // Validaciones de error críticas
   if (inductionDays < VALIDATION_RULES.MIN_INDUCTION_DAYS || 
       inductionDays > VALIDATION_RULES.MAX_INDUCTION_DAYS) {
     errors.push(`Los días de inducción deben estar entre ${VALIDATION_RULES.MIN_INDUCTION_DAYS} y ${VALIDATION_RULES.MAX_INDUCTION_DAYS}`);
@@ -15,7 +14,6 @@ export const validateInputs = (workDays, restDays, inductionDays, totalDrillingD
     errors.push("Los días de trabajo deben ser mayores que los días de inducción");
   }
   
-  // Validaciones de advertencia
   if (restDays - 2 <= 0) {
     warnings.push("Los días de descanso real son muy pocos");
   }
@@ -33,24 +31,21 @@ export const validateSchedulePatterns = (schedule, s3EntryDay) => {
   const maxDays = schedule.s1.length;
 
   for (let day = 0; day < maxDays; day++) {
-    // Contar perforaciones
+    
     let drillingCount = 0;
     if (schedule.s1[day] === 'P') drillingCount++;
     if (schedule.s2[day] === 'P') drillingCount++;
     if (schedule.s3[day] === 'P') drillingCount++;
     
-    // Validar regla 1 y 2: EXACTAMENTE 2 perforando
     if (drillingCount === 3) {
       errors.push(`Día ${day}: 3 supervisores perforando`);
     }
     
-    // Validar regla 3: Nunca solo 1 perforando (una vez que S3 entró)
     const s3Active = day >= s3EntryDay;
     if (s3Active && drillingCount === 1) {
       warnings.push(`Día ${day}: Solo 1 supervisor perforando`);
     }
     
-    // Validar patrones inválidos
     if (day > 0) {
       validateConsecutiveStates(schedule, day, errors);
       validateInvalidTransitions(schedule, day, errors);

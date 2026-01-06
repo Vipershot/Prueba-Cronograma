@@ -1,4 +1,3 @@
-// components/organisms/ConfigPanel.js
 import React from 'react';
 import InputGroup from '../molecules/InputGroup';
 import Button from '../atoms/Button';
@@ -15,7 +14,7 @@ const ConfigPanel = ({
   isFormValid = true
 }) => {
   return (
-    <div className="w-full bg-white rounded-2xl shadow-xl p-4 md:p-6 lg:p-8">
+    <div className="w-full bg-gradient-to-br from-white via-gray-50 to-blue-50 rounded-2xl shadow-2xl p-4 md:p-6 lg:p-8 border border-gray-200/50 backdrop-blur-sm animate-fade-in">
       <div className="mb-6 md:mb-8">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl md:text-2xl font-bold text-gray-800">

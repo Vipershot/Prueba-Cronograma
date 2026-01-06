@@ -1,4 +1,3 @@
-// components/atoms/Input.js
 import React, { useState, useEffect } from 'react';
 
 const Input = ({ 
@@ -22,12 +21,10 @@ const Input = ({
   const [isFocused, setIsFocused] = useState(false);
   const [localError, setLocalError] = useState('');
 
-  // Sincronizar con el valor del padre
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
-  // Validar valor actual
   useEffect(() => {
     if (inputValue !== '' && inputValue !== undefined) {
       validateValue(inputValue);
@@ -65,26 +62,22 @@ const Input = ({
     const newValue = e.target.value;
     setInputValue(newValue);
     
-    // Si está vacío, notificar al padre
     if (newValue === '') {
       if (onChange && name) {
-        onChange(name, '', true); // true = está vacío
+        onChange(name, '', true);
       }
       return;
     }
     
-    // Convertir a número y validar
     const numValue = parseInt(newValue, 10);
     
     if (!isNaN(numValue)) {
-      // No aplicar límites aquí, solo validar
       const isValid = validateValue(numValue);
       
       if (onChange && name) {
         onChange(name, numValue, isValid);
       }
     } else {
-      // No es un número, pero permitimos que el usuario siga escribiendo
       if (onChange && name) {
         onChange(name, newValue, false);
       }
@@ -93,15 +86,12 @@ const Input = ({
 
   const handleBlur = () => {
     setIsFocused(false);
-    
-    // Si el campo está vacío o no es válido, mantenerlo vacío
-    // El usuario debe ingresar un valor manualmente
+
     if (inputValue === '' || localError) {
-      // No hacer nada, dejar que el usuario corrija
+
       return;
     }
 
-    // Solo establecer valor si es válido
     const numValue = parseInt(inputValue, 10);
     if (!isNaN(numValue) && validateValue(numValue)) {
       if (onChange && name) {
@@ -112,7 +102,6 @@ const Input = ({
 
   const handleFocus = () => {
     setIsFocused(true);
-    // Seleccionar todo el texto al enfocar
     setTimeout(() => {
       const input = document.getElementById(id);
       if (input) input.select();
@@ -120,7 +109,6 @@ const Input = ({
   };
 
   const handleKeyDown = (e) => {
-    // Permitir todas las teclas de control y navegación
     const allowedKeys = [
       'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
@@ -131,7 +119,6 @@ const Input = ({
       return;
     }
 
-    // Solo permitir números, punto y signo negativo (si aplica)
     const isNumber = /^\d$/.test(e.key);
     const isDecimal = e.key === '.' && type === 'number';
     const isMinus = e.key === '-' && min < 0;

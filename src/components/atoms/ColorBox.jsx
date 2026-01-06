@@ -1,4 +1,3 @@
-// components/atoms/ColorBox.js
 import React from 'react';
 
 const ColorBox = ({ color, size = 'medium', border = true, className = '' }) => {

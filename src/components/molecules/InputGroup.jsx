@@ -1,4 +1,3 @@
-// components/molecules/InputGroup.js
 import React, { useState, useEffect } from 'react';
 import Input from '../atoms/Input';
 
@@ -17,7 +16,6 @@ const InputGroup = ({
     totalDrillingDays: ''
   });
 
-  // Sincronizar errores del padre
   useEffect(() => {
     setLocalErrors(prev => ({
       ...prev,
@@ -26,7 +24,6 @@ const InputGroup = ({
   }, [errors]);
 
   const handleInputChange = (field, value, isValid) => {
-    // Actualizar error local
     if (isValid === false) {
       setLocalErrors(prev => ({
         ...prev,
@@ -39,7 +36,6 @@ const InputGroup = ({
       }));
     }
 
-    // Llamar a la función correspondiente
     switch(field) {
       case 'workDays':
         setWorkDays(field, value, isValid);

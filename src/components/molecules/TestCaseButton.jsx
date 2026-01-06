@@ -1,4 +1,3 @@
-// components/molecules/TestCaseButton.js
 import React from 'react';
 import Button from '../atoms/Button';
 
