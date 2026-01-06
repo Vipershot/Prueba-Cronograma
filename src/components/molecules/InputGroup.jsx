@@ -55,8 +55,8 @@ const InputGroup = ({
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+    <div className="w-full space-y-8 md:space-y-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
         <Input
           name="workDays"
           label="Días de trabajo (N)"

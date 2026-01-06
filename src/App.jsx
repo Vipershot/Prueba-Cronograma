@@ -71,17 +71,44 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 w-full">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 w-full p-4 md:p-6 lg:p-8">
       <MainLayout
         header={
-          <div className="w-full text-center py-6 md:py-8 px-4 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white shadow-lg">
-            <div className="container mx-auto max-w-7xl">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
-                Sistema de Planificación de Turnos Mineros
-              </h1>
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl opacity-90 max-w-4xl mx-auto px-2">
-                Planificación inteligente de turnos para 3 supervisores de perforación
+          <div className="w-full text-center py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white shadow-2xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
+            <div className="container mx-auto max-w-7xl relative z-10">
+              <div className="flex items-center justify-center mb-4 md:mb-6">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 md:w-8 md:h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                  Sistema de Planificación
+                </h1>
+              </div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold mb-4 md:mb-6 text-blue-100">
+                Turnos Mineros
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl opacity-90 max-w-5xl mx-auto px-4 leading-relaxed">
+                Planificación inteligente y automática de turnos para 3 supervisores de perforación
+                siguiendo reglas estrictas de seguridad operacional
               </p>
+              <div className="mt-6 md:mt-8 flex flex-wrap justify-center gap-4 md:gap-6">
+                <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                  <div className="w-3 h-3 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                  <span className="text-sm md:text-base font-medium">Siempre 2 perforando</span>
+                </div>
+                <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                  <div className="w-3 h-3 bg-red-400 rounded-full mr-2"></div>
+                  <span className="text-sm md:text-base font-medium">Nunca 3 perforando</span>
+                </div>
+                <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                  <span className="text-sm md:text-base font-medium">Nunca 1 perforando</span>
+                </div>
+              </div>
             </div>
           </div>
         }
